@@ -25,7 +25,17 @@ jobs:
       - name: Build app
         run: npm run build
 
-      - name: Deploy to VPS via SSH
+      - name: Prepare deploy directory on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            mkdir -p /var/www/uolcal.broadsolutiontech.com/calculator-uol
+            rm -rf /var/www/uolcal.broadsolutiontech.com/calculator-uol/*
+
+      - name: Deploy dist files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -35,10 +45,13 @@ jobs:
           target: "/var/www/uolcal.broadsolutiontech.com/calculator-uol"
           strip_components: 1
 
-      - name: Reload Nginx
+      - name: Fix permissions and reload Nginx
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          script: sudo systemctl reload nginx
+          script: |
+            chmod -R 755 /var/www/uolcal.broadsolutiontech.com/calculator-uol
+            chown -R www-data:www-data /var/www/uolcal.broadsolutiontech.com/calculator-uol
+            sudo systemctl reload nginx
