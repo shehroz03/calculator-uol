@@ -8,7 +8,7 @@ import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip as Recharts
 import { auth } from './supabase-config';
 
 const GRADE_POINTS = {
-  'A': 4.00, 'A-': 3.75, 'B+': 3.50, 'B': 3.00, 'B-': 2.75, 'C+': 2.50, 'C': 2.00, 'C-': 1.75, 'D+': 1.50, 'D': 1.00, 'F': 0.00
+  'A': 4.00, 'A-': 3.75, 'B+': 3.50, 'B': 3.00, 'C+': 2.50, 'C': 2.00, 'D+': 1.50, 'D': 1.00, 'F': 0.00
 };
 
 const INITIAL_SUBJECT = { title: '', creditHours: '', grade: '' };
