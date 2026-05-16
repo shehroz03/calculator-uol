@@ -1,0 +1,18 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model user_results {
+  id               Int      @id @default(autoincrement())
+  userid           String   @unique @db.VarChar(255)
+  currentgpa       String?  @db.VarChar(50)
+  totalcreditsdone String?  @db.VarChar(50)
+  semesters        Json?
+  updatedat        DateTime @default(now()) @db.Timestamp(6)
+}
