@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uol-pro-v1';
+const CACHE_NAME = 'uol-pro-v2';
 const urlsToCache = [
     '/',
     '/index.html',
