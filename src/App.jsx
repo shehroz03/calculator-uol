@@ -8,7 +8,7 @@ import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip as Recharts
 import { auth } from './supabase-config';
 
 const GRADE_POINTS = {
-  'A': 4.00, 'A-': 3.75, 'B+': 3.50, 'B': 3.00, 'B-': 2.75, 'C+': 2.50, 'C': 2.00, 'C-': 1.75, 'D+': 1.50, 'D': 1.00, 'F': 0.00
+  'A': 4.00, 'A-': 3.75, 'B+': 3.50, 'B': 3.00, 'C+': 2.50, 'C': 2.00, 'D+': 1.50, 'D': 1.00, 'F': 0.00
 };
 
 const INITIAL_SUBJECT = { title: '', creditHours: '', grade: '' };
@@ -528,38 +528,56 @@ function App() {
             <div style={{ marginBottom: '16px' }}>
               <button
                 onClick={() => setShowQuickCalc(v => !v)}
-                style={{ background: showQuickCalc ? 'var(--primary)' : 'var(--bg-color)', color: showQuickCalc ? 'white' : 'var(--primary)', border: '1.5px solid var(--primary)', padding: '7px 16px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                style={{ background: showQuickCalc ? 'var(--primary)' : 'transparent', color: showQuickCalc ? 'white' : 'var(--primary)', border: '2px solid var(--primary)', padding: '8px 18px', borderRadius: '10px', fontSize: '0.82rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
               >
-                ⚡ {showQuickCalc ? 'Hide' : 'Quick CGPA'} Calculator
+                ⚡ Quick CGPA Calculator {showQuickCalc ? '▲' : '▼'}
               </button>
               {showQuickCalc && (
-                <div style={{ marginTop: '12px', padding: '16px', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Enter each semester's GPA + credits directly — no need to add subjects</p>
+                <div style={{ marginTop: '12px', padding: '20px', background: 'var(--card-bg)', borderRadius: '16px', border: '1px solid var(--border)', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '14px', lineHeight: '1.5' }}>
+                    Enter each semester's GPA &amp; credit hours — no subjects needed
+                  </p>
+
+                  {/* Column headers */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '48px 1fr 1fr 32px', gap: '8px', marginBottom: '6px', padding: '0 2px' }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>#</span>
+                    <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Semester GPA</span>
+                    <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Credit Hours</span>
+                    <span></span>
+                  </div>
+
                   {quickSems.map((s, i) => (
-                    <div key={s.id} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', minWidth: '50px', fontWeight: 'bold' }}>Sem {i + 1}</span>
-                      <input type="number" step="0.01" placeholder="GPA e.g. 3.20" value={s.gpa}
+                    <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '48px 1fr 1fr 32px', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--primary)', background: 'rgba(16,185,129,0.1)', borderRadius: '6px', padding: '4px 6px', textAlign: 'center' }}>S{i + 1}</span>
+                      <input type="number" step="0.01" min="0" max="4" placeholder="e.g. 3.20" value={s.gpa}
                         onChange={e => setQuickSems(p => p.map(x => x.id === s.id ? { ...x, gpa: e.target.value } : x))}
-                        style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-main)', fontSize: '0.85rem' }} />
-                      <input type="number" placeholder="Credits e.g. 18" value={s.credits}
+                        style={{ padding: '9px 12px', borderRadius: '9px', border: '1px solid var(--border)', background: 'var(--bg-color)', color: 'var(--text-main)', fontSize: '0.88rem', width: '100%', boxSizing: 'border-box' }} />
+                      <input type="number" min="0" placeholder="e.g. 18" value={s.credits}
                         onChange={e => setQuickSems(p => p.map(x => x.id === s.id ? { ...x, credits: e.target.value } : x))}
-                        style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-main)', fontSize: '0.85rem' }} />
-                      {quickSems.length > 1 && (
-                        <button onClick={() => setQuickSems(p => p.filter(x => x.id !== s.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f43f5e', padding: '4px' }}><X size={16} /></button>
-                      )}
+                        style={{ padding: '9px 12px', borderRadius: '9px', border: '1px solid var(--border)', background: 'var(--bg-color)', color: 'var(--text-main)', fontSize: '0.88rem', width: '100%', boxSizing: 'border-box' }} />
+                      <button onClick={() => quickSems.length > 1 && setQuickSems(p => p.filter(x => x.id !== s.id))}
+                        style={{ background: 'none', border: 'none', cursor: quickSems.length > 1 ? 'pointer' : 'default', color: quickSems.length > 1 ? '#f43f5e' : 'transparent', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <X size={15} />
+                      </button>
                     </div>
                   ))}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                    <button onClick={() => setQuickSems(p => [...p, { id: Date.now(), gpa: '', credits: '' }])} style={{ background: 'none', border: '1px dashed var(--primary)', color: 'var(--primary)', padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>+ Add Semester</button>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '14px' }}>
+                    <button onClick={() => setQuickSems(p => [...p, { id: Date.now(), gpa: '', credits: '' }])}
+                      style={{ background: 'none', border: '1.5px dashed var(--primary)', color: 'var(--primary)', padding: '7px 14px', borderRadius: '9px', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer' }}>
+                      + Add Semester
+                    </button>
                     {(() => {
                       const totalCr = quickSems.reduce((a, s) => a + (parseFloat(s.credits) || 0), 0);
                       const cumGPA = totalCr > 0 ? quickSems.reduce((a, s) => a + (parseFloat(s.gpa) || 0) * (parseFloat(s.credits) || 0), 0) / totalCr : 0;
                       return totalCr > 0 ? (
-                        <div style={{ textAlign: 'right' }}>
-                          <span style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--primary)' }}>{cumGPA.toFixed(2)}</span>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>{quickSems.length} sems · {totalCr} credits</span>
+                        <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '12px', padding: '10px 18px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--primary)', lineHeight: 1 }}>{cumGPA.toFixed(2)}</div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '3px' }}>CGPA · {quickSems.length} sems · {totalCr} cr</div>
                         </div>
-                      ) : null;
+                      ) : (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Result will appear here</div>
+                      );
                     })()}
                   </div>
                 </div>
