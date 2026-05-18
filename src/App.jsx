@@ -8,7 +8,7 @@ import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip as Recharts
 import { auth } from './supabase-config';
 
 const GRADE_POINTS = {
-  'A': 4.00, 'A-': 3.75, 'B+': 3.50, 'B': 3.00, 'C+': 2.50, 'C': 2.00, 'D+': 1.50, 'D': 1.00, 'F': 0.00
+  'A': 4.00, 'A-': 3.75, 'B+': 3.50, 'B': 3.00, 'B-': 2.75, 'C+': 2.50, 'C': 2.00, 'C-': 1.75, 'D+': 1.50, 'D': 1.00, 'F': 0.00
 };
 
 const INITIAL_SUBJECT = { title: '', creditHours: '', grade: '' };
@@ -19,6 +19,7 @@ function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [authError, setAuthError] = useState('');
   const [isLoginView, setIsLoginView] = useState(true);
 
@@ -36,6 +37,9 @@ function App() {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showContact, setShowContact] = useState(false);
+  const [showDonate, setShowDonate] = useState(false);
+  const [showQuickCalc, setShowQuickCalc] = useState(false);
+  const [quickSems, setQuickSems] = useState([{ id: 1, gpa: '', credits: '' }]);
 
   const [profile, setProfile] = useState({ name: '', rollNo: '', program: '' });
   const [targetGPA, setTargetGPA] = useState('');
@@ -69,12 +73,27 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const validatePassword = (pw) => {
+    if (pw.length < 8) return 'Password must be at least 8 characters.';
+    if (!/[A-Z]/.test(pw)) return 'Password must contain at least one uppercase letter.';
+    if (!/[a-z]/.test(pw)) return 'Password must contain at least one lowercase letter.';
+    return null;
+  };
+
   const handleAuth = async (e) => {
     e.preventDefault();
     setAuthError('');
-    const { data, error } = isLoginView 
+    if (!isLoginView && !fullName.trim()) {
+      setAuthError('Please enter your full name.');
+      return;
+    }
+    if (!isLoginView) {
+      const pwError = validatePassword(password);
+      if (pwError) { setAuthError(pwError); return; }
+    }
+    const { data, error } = isLoginView
       ? await auth.signInWithPassword({ email, password })
-      : await auth.signUp({ email, password });
+      : await auth.signUp({ email, password, options: { data: { full_name: fullName.trim() } } });
 
     if (error) {
       setAuthError(error.message);
@@ -520,7 +539,7 @@ function App() {
                 <p style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--secondary)' }}>Support Developer</p>
                 <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Help us keep this tool free & fast!</p>
               </div>
-              <button style={{
+              <button onClick={() => setShowDonate(true)} style={{
                 background: 'var(--secondary)',
                 color: 'white',
                 border: 'none',
@@ -533,6 +552,48 @@ function App() {
                 DONATE ☕
               </button>
             </div>
+            {/* Quick CGPA Calculator Toggle */}
+            <div style={{ marginBottom: '16px' }}>
+              <button
+                onClick={() => setShowQuickCalc(v => !v)}
+                style={{ background: showQuickCalc ? 'var(--primary)' : 'var(--bg-color)', color: showQuickCalc ? 'white' : 'var(--primary)', border: '1.5px solid var(--primary)', padding: '7px 16px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                ⚡ {showQuickCalc ? 'Hide' : 'Quick CGPA'} Calculator
+              </button>
+              {showQuickCalc && (
+                <div style={{ marginTop: '12px', padding: '16px', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Enter each semester's GPA + credits directly — no need to add subjects</p>
+                  {quickSems.map((s, i) => (
+                    <div key={s.id} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', minWidth: '50px', fontWeight: 'bold' }}>Sem {i + 1}</span>
+                      <input type="number" step="0.01" placeholder="GPA e.g. 3.20" value={s.gpa}
+                        onChange={e => setQuickSems(p => p.map(x => x.id === s.id ? { ...x, gpa: e.target.value } : x))}
+                        style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-main)', fontSize: '0.85rem' }} />
+                      <input type="number" placeholder="Credits e.g. 18" value={s.credits}
+                        onChange={e => setQuickSems(p => p.map(x => x.id === s.id ? { ...x, credits: e.target.value } : x))}
+                        style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-main)', fontSize: '0.85rem' }} />
+                      {quickSems.length > 1 && (
+                        <button onClick={() => setQuickSems(p => p.filter(x => x.id !== s.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f43f5e', padding: '4px' }}><X size={16} /></button>
+                      )}
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                    <button onClick={() => setQuickSems(p => [...p, { id: Date.now(), gpa: '', credits: '' }])} style={{ background: 'none', border: '1px dashed var(--primary)', color: 'var(--primary)', padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>+ Add Semester</button>
+                    {(() => {
+                      const totalCr = quickSems.reduce((a, s) => a + (parseFloat(s.credits) || 0), 0);
+                      const cumGPA = totalCr > 0 ? quickSems.reduce((a, s) => a + (parseFloat(s.gpa) || 0) * (parseFloat(s.credits) || 0), 0) / totalCr : 0;
+                      return totalCr > 0 ? (
+                        <div style={{ textAlign: 'right' }}>
+                          <span style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--primary)' }}>{cumGPA.toFixed(2)}</span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>{quickSems.length} sems · {totalCr} credits</span>
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="mb-8">
               <h3 className="text-sm font-bold opacity-60 uppercase mb-3 text-slate-900 dark:text-slate-100">Current GPA (Optional)</h3>
               <div className="flex gap-1">
@@ -615,6 +676,9 @@ function App() {
               <p style={{ marginTop: '5px', marginBottom: '15px' }}>Save your CGPA data to the cloud ☁️</p>
 
               <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {!isLoginView && (
+                  <input type="text" placeholder="Full Name" required value={fullName} onChange={e => setFullName(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-color)', color: 'var(--text-main)' }} />
+                )}
                 <input type="email" placeholder="Email" required value={email} onChange={e => setEmail(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-color)', color: 'var(--text-main)' }} />
                 <input type="password" placeholder="Password" required value={password} onChange={e => setPassword(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-color)', color: 'var(--text-main)' }} />
 
@@ -676,6 +740,27 @@ function App() {
               </div>
               <p>For community support, join our student forum at forum.uolpro.com</p>
               <button className="btn-action" onClick={() => setShowContact(false)}>Close</button>
+            </motion.div>
+          </motion.div>
+        )}
+        {showDonate && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="modal-overlay" onClick={() => setShowDonate(false)}>
+            <motion.div initial={{ y: 50 }} animate={{ y: 0 }} className="modal-content" onClick={e => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setShowDonate(false)}><X size={20} /></button>
+              <h3 className="section-title" style={{ margin: 0 }}>☕ Support the Developer</h3>
+              <p style={{ marginTop: '10px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>UOL Pro is free and ad-light. Your support keeps it running!</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '15px' }}>
+                <a href="https://paypal.me/miansabmi" target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px', borderRadius: '12px', background: '#003087', color: 'white', textDecoration: 'none', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                  <span style={{ fontSize: '1.4rem' }}>💳</span> Donate via PayPal
+                </a>
+                <div style={{ padding: '14px', borderRadius: '12px', background: 'var(--bg-color)', border: '1px solid var(--border)' }}>
+                  <p style={{ margin: '0 0 4px 0', fontWeight: 'bold', fontSize: '0.85rem', color: 'var(--text-main)' }}>📱 JazzCash / EasyPaisa</p>
+                  <p style={{ margin: 0, color: 'var(--primary)', fontWeight: '800', fontSize: '1rem', letterSpacing: '1px' }}>0300-0000000</p>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Account: Mian Sabir</p>
+                </div>
+              </div>
+              <p style={{ marginTop: '15px', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>Even a small amount means a lot 🙏</p>
+              <button className="btn-action" onClick={() => setShowDonate(false)} style={{ marginTop: '10px' }}>Close</button>
             </motion.div>
           </motion.div>
         )}
