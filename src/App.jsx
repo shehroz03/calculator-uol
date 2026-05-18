@@ -524,34 +524,6 @@ function App() {
               </div>
             </div>
 
-            {/* PRO/Monetization Support Section */}
-            <div style={{
-              background: 'linear-gradient(135deg,rgba(217, 119, 6, 0.1),rgba(217, 119, 6, 0.05))',
-              padding: '12px',
-              borderRadius: '12px',
-              marginBottom: '20px',
-              border: '1px solid rgba(217, 119, 6, 0.2)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <div>
-                <p style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--secondary)' }}>Support Developer</p>
-                <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Help us keep this tool free & fast!</p>
-              </div>
-              <button onClick={() => setShowDonate(true)} style={{
-                background: 'var(--secondary)',
-                color: 'white',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                fontSize: '10px',
-                fontWeight: 'bold',
-                cursor: 'pointer'
-              }}>
-                DONATE ☕
-              </button>
-            </div>
             {/* Quick CGPA Calculator Toggle */}
             <div style={{ marginBottom: '16px' }}>
               <button
